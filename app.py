@@ -147,6 +147,6 @@ with tabs[1]:
         columns = [x for x in df.columns if x not in ('block height', 'Total')]
         modified_df = pd.melt(df, id_vars=['block height', 'Total'], value_vars=columns,  value_name='Bid', var_name='MinerID')
         modified_df['Probability'] = modified_df['Bid']/modified_df['Total']
-        modified_df = modified_df.groupby(['block height','MinerID'])['Probability'].mean().reset_index()
+        modified_df = modified_df.groupby(['MinerID'])['Probability'].mean().reset_index()
 
         st.dataframe(modified_df.head())
