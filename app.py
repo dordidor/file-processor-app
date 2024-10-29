@@ -3,6 +3,7 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 from io import BytesIO
+import yfinance as yf
 
 
 def highlight_winning_bids(cell, winning_dict, block_height, miner_id):
@@ -150,3 +151,13 @@ with tabs[1]:
         modified_df = modified_df.groupby(['MinerID'])['Probability'].mean().reset_index()
 
         st.dataframe(modified_df.head())
+
+with tab[3]:
+
+    # Bitcoin ticker on Yahoo Finance is BTC-USD
+    ticker = 'BTC-USD'
+    data = yf.download(ticker, period='1d', interval='1m')
+
+    # Get the latest price (most recent close price)
+    latest_price = data['Close'][-1]
+    print(f"Current Bitcoin price: ${latest_price}")
