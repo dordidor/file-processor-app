@@ -156,8 +156,8 @@ with tabs[2]:
 
     # Bitcoin ticker on Yahoo Finance is BTC-USD
     ticker = 'BTC-USD'
-    data = yf.download(ticker, period='1d', interval='1m')
+    # data = yf.download(ticker, period='1d', interval='1m')
 
     # Get the latest price (most recent close price)
-    latest_price = data['Close'][-1]
-    print(f"Current Bitcoin price: ${latest_price}")
+    # latest_price = data['Close'][-1]
+    # print(f"Current Bitcoin price: ${latest_price}")
