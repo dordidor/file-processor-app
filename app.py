@@ -134,4 +134,19 @@ with tabs[0]:
         else:
             st.error("One of the files could not be read. Please check the format.")
 
-    
+with tabs[1]:
+
+    st.markdown("#### This tab does some analysis of the imported data")
+
+    # File uploader for the file (file to process)
+    file1 = st.file_uploader("Analyze this file:", type=['csv', 'xlsx'])
+    if file1:
+
+        # Step 3: Process the files
+        df = read_file(file1)
+        columns = [x for x in df.columns if x not in ('block height', 'Total')]
+        modified_df = pd.melt(df, id_vars=['block height', 'Total'], value_vars=columns,  value_name='Bid', var_name='MinerID')
+        modified_df['Probability'] = modified_df['Bid']/modified_df['Total']
+        modified_df = modified_df.groupby(['block height','MinerID'])['Probability'].mean().reset_index()
+
+        st.dataframe(modified_df.head())
