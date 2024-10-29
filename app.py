@@ -152,7 +152,7 @@ with tabs[1]:
 
         st.dataframe(modified_df.head())
 
-with tabs[3]:
+with tabs[2]:
 
     # Bitcoin ticker on Yahoo Finance is BTC-USD
     ticker = 'BTC-USD'
