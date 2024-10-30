@@ -29,12 +29,15 @@ def process_data(df):
     miner_ids = miner_ids.dropna(subset=['MinerID', 'Bid'], how='all')
 
     # Create a dictionary of winning bids using the 'winning bidder' column
-    winning_dict = df.set_index('block height')[['winning bidder', 'winning bid']].to_dict(orient='index')
+    auction_winners = dict(zip(df['block height'], df['winning bidder']))
 
+    return miner_ids
+
+def pivot_data(df):
     # Pivot the data to get miner IDs as columns
-    final = miner_ids.pivot(index=['block height','Total'], columns='MinerID', values='Bid').reset_index()
+    df_wide = df.pivot(index=['block height','Total'], columns='MinerID', values='Bid').reset_index()
     
-    return final, winning_dict
+    return df_wide
 
 # Step 2: Define a function to read the files
 def read_file(file):
@@ -73,10 +76,11 @@ with tabs[0]:
             st.dataframe(df2.head())  
 
             # Process file 1 and extract winning bids
-            processed_df1, winning_dict = process_data(df1)  
+            processed_df1 = process_data(df1)  
+            df_wide = pivot_data(processed_df1)
 
             # Append processed data to file 2
-            appended_df = pd.concat([df2, processed_df1]).reset_index(drop=True)
+            appended_df = pd.concat([df2, df_wide]).reset_index(drop=True)
 
             # Display the appended dataframe
             st.write("Appended DataFrame:")
