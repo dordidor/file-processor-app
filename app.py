@@ -207,26 +207,30 @@ with tabs[1]:
     file1 = st.file_uploader("Analyze this file:", type=['csv', 'xlsx'])
 
     # Check if a file is uploaded
-    if file1 is not None:
-        # If the uploaded file is an Excel file
-        if file1.name.endswith('.xlsx'):
-            # Load the workbook to get the sheet names
-            xls = pd.ExcelFile(file1)
-            sheet_names = xls.sheet_names
+    # if file1 is not None:
+    #     # If the uploaded file is an Excel file
+    #     if file1.name.endswith('.xlsx'):
+    #         # Load the workbook to get the sheet names
+    #         xls = pd.ExcelFile(file1)
+    #         sheet_names = xls.sheet_names
             
-            # Dropdown to select the sheet
-            selected_sheet = st.selectbox("Select a worksheet", sheet_names)
+    #         # Dropdown to select the sheet
+    #         selected_sheet = st.selectbox("Select a worksheet", sheet_names)
             
-            # Read the selected sheet into a DataFrame
-            df_long = read_data_with_highlights(file1, selected_sheet)
-        else:
-            # If it's a CSV, read directly
-            # df = pd.read_csv(file1)
-            print("File is not an excel file")
+    #         # Read the selected sheet into a DataFrame
+    #         df_long = read_data_with_highlights(file1, selected_sheet)
+    #     else:
+    #         # If it's a CSV, read directly
+    #         # df = pd.read_csv(file1)
+    #         print("File is not an excel file")
+
+    if file1:
+
+        df_long = read_data_with_highlights(file1, 'Master')
         
         df_long['Total'] = df_long.groupby('block height')['Bid'].transform('sum')
         df_long['Probability'] = df_long['Bid']/df_long['Total']
-        
+
         summary = df_long.groupby('MinerID').agg(
             Total_Bid_BTC = ('Bid', 'sum'),
             Avg_Bid_BTC=('Bid', 'mean'),
