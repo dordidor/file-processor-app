@@ -251,6 +251,9 @@ with tabs[1]:
         summary['Average Bid (USD)'] = summary['Average Bid (BTC)']/100000000 * btc
         summary['Total Reward (USD)'] = summary['total_wins'] * 1000 * stx
 
+        summary = summary[['MinerID', 'Total Bid (BTC)', 'Total Bid (USD)', 'Average Bid (BTC)','Average Bid (USD)',
+                            'Average Theoretical Win Rate', 'Actual Win Rate', 'Total Reward (USD)']]
+                            
         st.dataframe(summary)
 
 with tabs[2]:
