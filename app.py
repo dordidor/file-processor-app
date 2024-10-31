@@ -225,21 +225,31 @@ with tabs[1]:
             print("File is not an excel file")
         
         summary = df_long.groupby('MinerID').agg(
-                                                    Total_Bid_BTC = ('Bid', 'sum'),
-                                                    Avg_Bid_BTC=('Bid', 'mean')
-                                                ).reset_index()
+            Total_Bid_BTC = ('Bid', 'sum'),
+            Avg_Bid_BTC=('Bid', 'mean'),
+            Avg_theoretical_win_rate = ('Probability', 'mean'),
+            total_bids=('is_winner', lambda x: x[df_long['Bid'].notnull()].count()),    # Count only if Bid is not null
+            total_wins=('is_winner', lambda x: x[df_long['Bid'].notnull()].sum())       # Sum only if Bid is not null
 
-        summary.rename(columns={'Total_Bid_BTC': 'Total Bid (BTC)', 'Avg_Bid_BTC': 'Average Bid (BTC)'}, inplace=True)
+        ).reset_index()
+
+        summary['Actual Win Rate'] = summary['total_wins']/summary['total_bids']
+
+        summary.rename(columns={
+                    'Total_Bid_BTC': 'Total Bid (BTC)', 
+                    'Avg_Bid_BTC': 'Average Bid (BTC)', 
+                    'Avg_theoretical_win_rate':'Average Theoretical Win Rate'}, inplace=True)
 
         summary['Total Bid (BTC)'] =  2 * summary['Total Bid (BTC)']
         summary['Average Bid (BTC)'] =  2 * summary['Average Bid (BTC)']
 
         # Number input
         btc = st.number_input("Price of BTC:", min_value=0)
-        satoshi = st.number_input("Price of Satoshi:", min_value=0)
+        stx = st.number_input("Price of STX:", min_value=0)
 
-        summary['Total Bid (USD)'] = summary['Total Bid (BTC)']/satoshi * btc
-        summary['Average Bid (USD)'] = summary['Average Bid (BTC)']/satoshi * btc
+        summary['Total Bid (USD)'] = summary['Total Bid (BTC)']/100000000 * btc
+        summary['Average Bid (USD)'] = summary['Average Bid (BTC)']/100000000 * btc
+        summary['Total Reward (USD)'] = summary['total_wins'] * 1000 * stx
 
         st.dataframe(summary)
 
