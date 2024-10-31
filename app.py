@@ -1,10 +1,30 @@
 import streamlit as st
 import pandas as pd
 from openpyxl import load_workbook
+from openpyxl.styles.colors import Color
 from openpyxl.styles import PatternFill
 from io import BytesIO
 import yfinance as yf
 
+def detect_highlighted_cells(filename, sheet_name, highlight_color='#ffff00'):
+    # Load the workbook and select the worksheet
+    wb = load_workbook(filename, data_only=True)
+    ws = wb[sheet_name]
+    
+    # Dictionary to store highlighted cells and their values
+    highlighted_cells = {}
+
+    # Iterate over all cells in the worksheet
+    for row in ws.iter_rows():
+        for cell in row:
+            # Check if the cell has a fill color
+            if cell.fill and cell.fill.start_color and cell.fill.start_color.rgb:
+                # Compare the cell's color to the highlight color
+                cell_color = cell.fill.start_color.rgb[-6:]  # Get RGB color without alpha
+                if cell_color == highlight_color:
+                    highlighted_cells[cell.coordinate] = cell.value  # Store cell address and value
+
+    return highlighted_cells
 
 def highlight_winning_bids(cell, winning_dict, block_height, miner_id):
     """Apply highlight color to cells if they match the winning bid."""
@@ -48,6 +68,46 @@ def read_file(file):
             df = pd.read_excel(file)
         return df
     return None
+
+def read_data_with_highlights(filename, sheet_name, highlight_color_hex='FFFF00'):
+    # Load the workbook and select the worksheet
+    wb = load_workbook(filename, data_only=True)
+    ws = wb[sheet_name]
+    
+    # Detect the header row (first row) and initialize an empty list to store data
+    header = [cell.value for cell in ws[1]]  # Assumes the first row is the header
+    auction_data = []
+
+    # Iterate over each row after the header
+    for row in ws.iter_rows(min_row=2):
+        auction_id = row[0].value  # First cell in each row is the auction ID
+        row_data = {"block height": auction_id}
+
+        # Loop over each bidder column and detect the bid amount and highlight status
+        for cell in row[1:]:  # Skip the first cell (auction_id)
+            bidder_id = header[cell.column - 1]  # Get the bidder ID from the header
+            bid_amount = cell.value
+            
+            # Check if the cell has a fill color matching the highlight color
+            is_winner = False
+            if cell.fill and cell.fill.start_color and cell.fill.start_color.rgb:
+                cell_color_hex = cell.fill.start_color.rgb[-6:]  # Extract RGB hex without alpha
+                if cell_color_hex.upper() == highlight_color_hex.upper():
+                    is_winner = True
+            
+            # Store data in the row dictionary with is_winner flag
+            row_data["MinerID"] = bidder_id
+            row_data["Bid"] = bid_amount
+            row_data["is_winner"] = is_winner
+            
+            # Append row data to auction data
+            auction_data.append(row_data.copy())
+
+    # Convert the list of dictionaries to a DataFrame
+    df_long = pd.DataFrame(auction_data)
+    df_long = df_long[df_long["MinerID"] != 'Total']
+
+    return df_long
 
 # Step 1: Take user input for two files
 st.title("File Processor and Appender")
@@ -145,16 +205,39 @@ with tabs[1]:
 
     # File uploader for the file (file to process)
     file1 = st.file_uploader("Analyze this file:", type=['csv', 'xlsx'])
-    if file1:
 
-        # Step 3: Process the files
-        df = read_file(file1)
-        columns = [x for x in df.columns if x not in ('block height', 'Total')]
-        modified_df = pd.melt(df, id_vars=['block height', 'Total'], value_vars=columns,  value_name='Bid', var_name='MinerID')
-        modified_df['Probability'] = modified_df['Bid']/modified_df['Total']
-        modified_df = modified_df.groupby(['MinerID'])['Probability'].mean().reset_index()
+    # Check if a file is uploaded
+    if file1 is not None:
+        # If the uploaded file is an Excel file
+        if file1.name.endswith('.xlsx'):
+            # Load the workbook to get the sheet names
+            xls = pd.ExcelFile(file1)
+            sheet_names = xls.sheet_names
+            
+            # Dropdown to select the sheet
+            selected_sheet = st.selectbox("Select a worksheet", sheet_names)
+            
+            # Read the selected sheet into a DataFrame
+            df_long = read_data_with_highlights(file1, selected_sheet)
+        else:
+            # If it's a CSV, read directly
+            # df = pd.read_csv(file1)
+            print("File is not an excel file")
+        
+        summary = df_long.groupby('MinerID').agg(
+                                                    Total_Bid_BTC = ('Bid', 'sum'),
+                                                    Avg_Bid_BTC=('Bid', 'mean')
+                                                ).reset_index()
 
-        st.dataframe(modified_df.head())
+        summary.rename(columns={'Total_Bid_BTC': 'Total Bid (BTC)', 'Avg_Bid_BTC': 'Average Bid (BTC)'}, inplace=True)
+
+        summary['Total Bid (BTC)'] =  2 * summary['Total Bid (BTC)']
+        summary['Average Bid (BTC)'] =  2 * summary['Average Bid (BTC)']
+
+        summary['Total Bid (USD)'] = summary['Total Bid (BTC)']/100000000 * 67000
+        summary['Average Bid (USD)'] = summary['Average Bid (BTC)']/100000000 * 67000
+
+        st.dataframe(summary)
 
 with tabs[2]:
 
