@@ -224,6 +224,9 @@ with tabs[1]:
             # df = pd.read_csv(file1)
             print("File is not an excel file")
         
+        df_long['Total'] = df_long.groupby('block height')['Bid'].transform('sum')
+        df_long['Probability'] = df_long['Bid']/df_long['Total']
+        
         summary = df_long.groupby('MinerID').agg(
             Total_Bid_BTC = ('Bid', 'sum'),
             Avg_Bid_BTC=('Bid', 'mean'),
@@ -253,7 +256,7 @@ with tabs[1]:
 
         summary = summary[['MinerID', 'Total Bid (BTC)', 'Total Bid (USD)', 'Average Bid (BTC)','Average Bid (USD)',
                             'Average Theoretical Win Rate', 'Actual Win Rate', 'Total Reward (USD)']]
-                            
+
         st.dataframe(summary)
 
 with tabs[2]:
