@@ -234,8 +234,12 @@ with tabs[1]:
         summary['Total Bid (BTC)'] =  2 * summary['Total Bid (BTC)']
         summary['Average Bid (BTC)'] =  2 * summary['Average Bid (BTC)']
 
-        summary['Total Bid (USD)'] = summary['Total Bid (BTC)']/100000000 * 67000
-        summary['Average Bid (USD)'] = summary['Average Bid (BTC)']/100000000 * 67000
+        # Number input
+        btc = st.number_input("Price of BTC:", min_value=0)
+        satoshi = st.number_input("Price of Satoshi:", min_value=0)
+
+        summary['Total Bid (USD)'] = summary['Total Bid (BTC)']/satoshi * btc
+        summary['Average Bid (USD)'] = summary['Average Bid (BTC)']/satoshi * btc
 
         st.dataframe(summary)
 
