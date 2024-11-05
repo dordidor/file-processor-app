@@ -263,6 +263,17 @@ with tabs[1]:
 
         st.dataframe(summary)
 
+        new_miner_bid_amount = st.number_input("Bid Amount of New Miner:", min_value=0)
+
+        m1, m2, m3, m4, m5 = st.columns((1,1,1,1,1))
+
+        m1.write('')
+        m2.metric(label = 'Bid Amount', value = new_miner_bid_amount)
+        m3.metric(label ='Average Cost',value = new_miner_bid_amount /100000000 * 67000) #, delta = str(int(to['Previous']))+' Compared to 1 hour ago', delta_color = 'inverse')
+        m4.metric(label ='Theoretical win rate',value = 20) #, delta = str(int(ch['Previous']))+' Compared to 1 hour ago', delta_color = 'inverse')
+        m1.write('')
+
+      
 with tabs[2]:
 
     # Bitcoin ticker on Yahoo Finance is BTC-USD
